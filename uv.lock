@@ -1882,6 +1882,7 @@ dependencies = [
     { name = "jupyter" },
     { name = "mlflow" },
     { name = "optuna" },
+    { name = "python-dotenv" },
     { name = "scikit-learn" },
     { name = "seaborn" },
 ]
@@ -1893,6 +1894,7 @@ requires-dist = [
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "mlflow", specifier = ">=3.16.1" },
     { name = "optuna", specifier = ">=5.0.0" },
+    { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
 ]

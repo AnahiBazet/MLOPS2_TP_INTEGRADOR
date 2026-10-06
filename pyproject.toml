@@ -13,6 +13,7 @@ dependencies = [
     "jupyter>=1.1.1",
     "mlflow>=3.16.1",
     "optuna>=5.0.0",
+    "python-dotenv>=1.2.3",
     "scikit-learn>=1.9.1",
     "seaborn>=0.13.2",
 ]
