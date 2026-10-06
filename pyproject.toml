@@ -1,10 +1,10 @@
 [project]
-name = "amq2-service-ml"
+name = "mlops2-tp"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "Facundo Adrián Lucianna", email = "facundolucianna@gmail.com" }
+    { name = "Anahi Bazet", email = "anahibazet@gmail.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
