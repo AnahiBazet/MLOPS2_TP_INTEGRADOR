@@ -73,7 +73,7 @@ def train_water_potability_model():
         import mlflow
         import optuna
 
-        from imblearn.over_sampling import RandomOverSampler
+        from imblearn.over_sampling import SMOTE
         from imblearn.pipeline import Pipeline
 
         from sklearn.ensemble import RandomForestClassifier
@@ -228,7 +228,7 @@ def train_water_potability_model():
             pipeline = Pipeline([
                 (
                     "oversampler",
-                    RandomOverSampler(
+                    SMOTE(
                         random_state=random_seed
                     )
                 ),
@@ -371,7 +371,7 @@ def train_water_potability_model():
         import mlflow
 
         from mlflow.models import infer_signature
-        from imblearn.over_sampling import RandomOverSampler
+        from imblearn.over_sampling import SMOTE
 
         from sklearn.metrics import (
             accuracy_score,
@@ -445,13 +445,15 @@ def train_water_potability_model():
         # Entrenar nuevamente con TODO train
         # -----------------------------------------------------
 
-        oversampler = RandomOverSampler(
-        random_state=random_seed
+        oversampler = SMOTE(
+            random_state=random_seed
         )
 
-        X_train_resampled, y_train_resampled = oversampler.fit_resample(
-            X_train,
-            y_train
+        X_train_resampled, y_train_resampled = (
+            oversampler.fit_resample(
+                X_train,
+                y_train
+            )
         )
         
         model.fit(
@@ -747,6 +749,8 @@ def train_water_potability_model():
                 "best_params"
             ].items()
         }
+
+        tags["balancing_strategy"] = "SMOTE"
 
         tags["best_cv_f1"] = str(
             evaluation_result["best_cv_f1"]
