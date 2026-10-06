@@ -17,6 +17,7 @@
 #
 # Modified by Facundo Lucianna on July 12, 2025, based on the 
 # original file from the ASF.
+# Modified by Anahi Bazet on October 6, 2026.
 
 # WARNING: This configuration is for local development. Do not use it in a production deployment.
 x-airflow-common: &airflow-common
