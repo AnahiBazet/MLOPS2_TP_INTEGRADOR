@@ -1,0 +1,18 @@
+query {
+  predict(
+    ph: 7.08
+    hardness: 204.89
+    solids: 20791.32
+    chloramines: 7.30
+    sulfate: 368.52
+    conductivity: 564.31
+    organicCarbon: 10.38
+    trihalomethanes: 86.99
+    turbidity: 2.96
+  ) {
+    prediction
+    label
+    probability
+    modelVersion
+  }
+}
