@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package scoring;
+
+message Features {
+  double ph = 1;
+  double hardness = 2;
+  double solids = 3;
+  double chloramines = 4;
+  double sulfate = 5;
+  double conductivity = 6;
+  double organic_carbon = 7;
+  double trihalomethanes = 8;
+  double turbidity = 9;
+}
+
+message Prediction {
+  int32 prediction = 1;
+  string label = 2;
+  double probability = 3;
+  int32 model_version = 4;
+}
+
+message BatchFeatures {
+  repeated Features instances = 1;
+}
+
+service Scoring {
+  rpc Predict(Features) returns (Prediction);
+  rpc PredictStream(BatchFeatures) returns (stream Prediction);
+}

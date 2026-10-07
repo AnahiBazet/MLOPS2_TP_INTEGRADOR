@@ -1,0 +1,7 @@
+grpcio>=1.78
+grpcio-tools>=1.78
+boto3>=1.38
+mlflow>=3.1
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3

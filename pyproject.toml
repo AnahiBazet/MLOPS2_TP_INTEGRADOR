@@ -9,6 +9,8 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "awswrangler>=3.17.1",
+    "grpcio>=1.84.0",
+    "grpcio-tools>=1.84.0",
     "ipykernel>=7.3.0",
     "jupyter>=1.1.1",
     "mlflow>=3.16.1",

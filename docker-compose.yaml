@@ -261,6 +261,31 @@ services:
       start_period: 120s
       retries: 3
 
+  grpc:
+    restart: always
+    build:
+      context: .
+      dockerfile: dockerfiles/grpc/Dockerfile
+    image: backend_grpc
+    container_name: grpc
+    profiles:
+      - all
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    ports:
+      - "50051:50051"
+    networks:
+      - frontend
+      - backend
+    environment:
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minio}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
+      - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
+      - AWS_ENDPOINT_URL_S3=http://s3:9000
+      - API_KEY=${API_KEY}
+    command: python server.py
+
   airflow-apiserver:
     <<: *airflow-common
     container_name: airflow-apiserver
