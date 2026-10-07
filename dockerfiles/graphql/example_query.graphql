@@ -1,3 +1,11 @@
+"""
+Ejemplo para utilizar la interfaz GraphiQL.
+
+IMPORTANTE: no olvidar colocar la API-KEY en el header.
+
+Este archivo se incluye únicamente como referencia y no forma
+parte de la implementación principal del TP.
+"""
 query {
   predict(
     ph: 7.08
