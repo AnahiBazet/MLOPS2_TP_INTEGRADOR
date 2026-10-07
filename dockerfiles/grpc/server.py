@@ -65,18 +65,19 @@ def request_to_features(request):
     """
     Convierte el mensaje Features recibido por gRPC en el
     diccionario esperado por predict_water_potability().
+    Si algún campo no está presente en el mensaje gRPC, se asigna None.
     """
 
     return {
-        "ph": request.ph,
-        "Hardness": request.hardness,
-        "Solids": request.solids,
-        "Chloramines": request.chloramines,
-        "Sulfate": request.sulfate,
-        "Conductivity": request.conductivity,
-        "Organic_carbon": request.organic_carbon,
-        "Trihalomethanes": request.trihalomethanes,
-        "Turbidity": request.turbidity,
+        "ph": request.ph if request.HasField("ph") else None,
+        "Hardness": request.hardness if request.HasField("hardness") else None,
+        "Solids": request.solids if request.HasField("solids") else None,
+        "Chloramines": request.chloramines if request.HasField("chloramines") else None,
+        "Sulfate": request.sulfate if request.HasField("sulfate") else None,
+        "Conductivity": request.conductivity if request.HasField("conductivity") else None,
+        "Organic_carbon": request.organic_carbon if request.HasField("organic_carbon") else None,
+        "Trihalomethanes": request.trihalomethanes if request.HasField("trihalomethanes") else None,
+        "Turbidity": request.turbidity if request.HasField("turbidity") else None,
     }
 
 

@@ -3,15 +3,15 @@ syntax = "proto3";
 package scoring;
 
 message Features {
-  double ph = 1;
-  double hardness = 2;
-  double solids = 3;
-  double chloramines = 4;
-  double sulfate = 5;
-  double conductivity = 6;
-  double organic_carbon = 7;
-  double trihalomethanes = 8;
-  double turbidity = 9;
+  optional double ph = 1;
+  optional double hardness = 2;
+  optional double solids = 3;
+  optional double chloramines = 4;
+  optional double sulfate = 5;
+  optional double conductivity = 6;
+  optional double organic_carbon = 7;
+  optional double trihalomethanes = 8;
+  optional double turbidity = 9;
 }
 
 message Prediction {

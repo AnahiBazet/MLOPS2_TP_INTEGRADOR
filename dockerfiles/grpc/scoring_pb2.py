@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rscoring.proto\x12\x07scoring\"\xb8\x01\n\x08\x46\x65\x61tures\x12\n\n\x02ph\x18\x01 \x01(\x01\x12\x10\n\x08hardness\x18\x02 \x01(\x01\x12\x0e\n\x06solids\x18\x03 \x01(\x01\x12\x13\n\x0b\x63hloramines\x18\x04 \x01(\x01\x12\x0f\n\x07sulfate\x18\x05 \x01(\x01\x12\x14\n\x0c\x63onductivity\x18\x06 \x01(\x01\x12\x16\n\x0eorganic_carbon\x18\x07 \x01(\x01\x12\x17\n\x0ftrihalomethanes\x18\x08 \x01(\x01\x12\x11\n\tturbidity\x18\t \x01(\x01\"[\n\nPrediction\x12\x12\n\nprediction\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\t\x12\x13\n\x0bprobability\x18\x03 \x01(\x01\x12\x15\n\rmodel_version\x18\x04 \x01(\x05\"5\n\rBatchFeatures\x12$\n\tinstances\x18\x01 \x03(\x0b\x32\x11.scoring.Features2|\n\x07Scoring\x12\x31\n\x07Predict\x12\x11.scoring.Features\x1a\x13.scoring.Prediction\x12>\n\rPredictStream\x12\x16.scoring.BatchFeatures\x1a\x13.scoring.Prediction0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rscoring.proto\x12\x07scoring\"\xe6\x02\n\x08\x46\x65\x61tures\x12\x0f\n\x02ph\x18\x01 \x01(\x01H\x00\x88\x01\x01\x12\x15\n\x08hardness\x18\x02 \x01(\x01H\x01\x88\x01\x01\x12\x13\n\x06solids\x18\x03 \x01(\x01H\x02\x88\x01\x01\x12\x18\n\x0b\x63hloramines\x18\x04 \x01(\x01H\x03\x88\x01\x01\x12\x14\n\x07sulfate\x18\x05 \x01(\x01H\x04\x88\x01\x01\x12\x19\n\x0c\x63onductivity\x18\x06 \x01(\x01H\x05\x88\x01\x01\x12\x1b\n\x0eorganic_carbon\x18\x07 \x01(\x01H\x06\x88\x01\x01\x12\x1c\n\x0ftrihalomethanes\x18\x08 \x01(\x01H\x07\x88\x01\x01\x12\x16\n\tturbidity\x18\t \x01(\x01H\x08\x88\x01\x01\x42\x05\n\x03_phB\x0b\n\t_hardnessB\t\n\x07_solidsB\x0e\n\x0c_chloraminesB\n\n\x08_sulfateB\x0f\n\r_conductivityB\x11\n\x0f_organic_carbonB\x12\n\x10_trihalomethanesB\x0c\n\n_turbidity\"[\n\nPrediction\x12\x12\n\nprediction\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\t\x12\x13\n\x0bprobability\x18\x03 \x01(\x01\x12\x15\n\rmodel_version\x18\x04 \x01(\x05\"5\n\rBatchFeatures\x12$\n\tinstances\x18\x01 \x03(\x0b\x32\x11.scoring.Features2|\n\x07Scoring\x12\x31\n\x07Predict\x12\x11.scoring.Features\x1a\x13.scoring.Prediction\x12>\n\rPredictStream\x12\x16.scoring.BatchFeatures\x1a\x13.scoring.Prediction0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,11 +32,11 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'scoring_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_FEATURES']._serialized_start=27
-  _globals['_FEATURES']._serialized_end=211
-  _globals['_PREDICTION']._serialized_start=213
-  _globals['_PREDICTION']._serialized_end=304
-  _globals['_BATCHFEATURES']._serialized_start=306
-  _globals['_BATCHFEATURES']._serialized_end=359
-  _globals['_SCORING']._serialized_start=361
-  _globals['_SCORING']._serialized_end=485
+  _globals['_FEATURES']._serialized_end=385
+  _globals['_PREDICTION']._serialized_start=387
+  _globals['_PREDICTION']._serialized_end=478
+  _globals['_BATCHFEATURES']._serialized_start=480
+  _globals['_BATCHFEATURES']._serialized_end=533
+  _globals['_SCORING']._serialized_start=535
+  _globals['_SCORING']._serialized_end=659
 # @@protoc_insertion_point(module_scope)
