@@ -383,7 +383,7 @@ Para cada caso se muestran:
 
 Para ejecutar el proyecto se requiere tener instalados:
 
-- **Git**
+- **Git** para el control de versionado.
 - **Docker Desktop** con Docker Compose habilitado.
 - **uv** para la gestión del entorno y las dependencias de Python.
 
@@ -412,16 +412,16 @@ En Windows, el entorno virtual puede activarse mediante:
 
 ### Configuración de variables de entorno
 
-En la raíz del proyecto debe existir un archivo `.env` con las variables de entorno utilizadas por los distintos servicios.
+En la raíz del proyecto debe existir un archivo `.env` con las variables de entorno utilizadas por los distintos servicios. A modo de ejemplo, se cuenta con el archivo `.env.example`. 
 
-Entre las variables necesarias se encuentran:
+Allí se deben ingresar:
 
 - `API_KEY`: clave compartida por las APIs REST, GraphQL y gRPC.
 - `KAGGLE_API_TOKEN`: token utilizado por el pipeline ETL para descargar el dataset desde Kaggle.
 
 El archivo `.env` también permite configurar puertos y credenciales utilizadas por los servicios de infraestructura.
 
-Las credenciales y claves no deben incorporarse directamente al código fuente.
+Las credenciales y claves reales no deben incorporarse directamente al código fuente ni versionarse en el repositorio.
 
 ### Inicio de la infraestructura
 
@@ -511,13 +511,19 @@ docker compose --profile all up -d --build
 
 ### Detener los servicios
 
-Para detener y eliminar los contenedores conservando los volúmenes:
+Para detener y eliminar los contenedores conservando los volúmenes e imágenes:
 
 ```powershell
 docker compose --profile all down
 ```
 
 Los datos persistidos en los volúmenes de PostgreSQL y MinIO se mantienen disponibles para posteriores ejecuciones.
+
+En cambio, si se desea eliminar los contenedores, imágenes y volúmenes:
+
+```powershell
+docker compose --profile all down -v --rmi all
+```
 
 ## 12. Estructura del proyecto
 
@@ -532,6 +538,7 @@ MLOPS2_TP_INTEGRADOR/
 ├── src/
 │   └── mlops2_tp/
 ├── .env
+├── .env.example
 ├── .gitattributes
 ├── .gitignore
 ├── .python-version
@@ -551,6 +558,7 @@ Los principales componentes del proyecto son:
 - `notebook_example/`: contiene la notebook de experimentación inicial.
 - `src/mlops2_tp/`: contiene la lógica compartida de inferencia, carga del modelo y pruebas.
 - `.env`: contiene las variables de entorno utilizadas por los distintos servicios.
+- `.env.example`: contiene un ejemplo del archivo `.env`.
 - `.gitattributes` y `.gitignore`: configuración del repositorio Git.
 - `.python-version`: define la versión de Python utilizada por el proyecto.
 - `arquitectura.png`: diagrama de arquitectura del sistema.
