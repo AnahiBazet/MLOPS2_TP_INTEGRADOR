@@ -156,11 +156,11 @@ La información de tracking de MLflow se almacena en **PostgreSQL**, mientras qu
 
 ## 8. Modelo productivo almacenado en MinIO
 
-El modelo productivo corresponde a la versión registrada en **MLflow** que posee el alias `champion`.
+El modelo productivo corresponde a la versión registrada en **MLflow Model Registry** que posee el alias `champion`.
 
 Actualmente, el modelo seleccionado es un `RandomForestClassifier`, elegido a partir del proceso de optimización y evaluación descripto en las secciones anteriores.
 
-Al iniciar los servicios de inferencia, se consulta **MLflow Model Registry** utilizando el nombre registrado `water_potability_model_prod` y el alias `champion` para identificar la versión productiva. A partir de la información obtenida, se carga desde **MinIO** el artefacto correspondiente a esa versión del modelo.
+Al iniciar los servicios de inferencia, se consulta **MLflow Model Registry** utilizando el nombre registrado `water_potability_model_prod` y el alias `champion` para identificar la versión productiva. A partir de esa versión, MLflow permite resolver la ubicación del artefacto asociado, que se encuentra almacenado físicamente en **MinIO**.
 
 El modelo y su número de versión quedan disponibles para ser utilizados por las APIs REST, GraphQL y gRPC.
 
