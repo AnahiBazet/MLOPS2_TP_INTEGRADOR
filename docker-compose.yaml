@@ -286,6 +286,20 @@ services:
       - API_KEY=${API_KEY}
     command: python server.py
 
+  grpc-client:
+    build:
+      context: .
+      dockerfile: dockerfiles/grpc-client/Dockerfile
+    profiles:
+      - test
+    depends_on:
+      - grpc
+    networks:
+      - backend
+    environment:
+      - API_KEY=${API_KEY}
+    command: python client.py
+
   airflow-apiserver:
     <<: *airflow-common
     container_name: airflow-apiserver

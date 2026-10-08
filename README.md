@@ -323,15 +323,21 @@ python -m grpc_tools.protoc `
   dockerfiles/grpc/scoring.proto
 ```
 
-El proyecto incluye un cliente de ejemplo que puede ejecutarse desde la raíz del proyecto mediante:
+El proyecto incluye un cliente gRPC de ejemplo containerizado de forma independiente del servidor. Este cliente permite probar una predicción individual mediante `Predict` y el procesamiento de múltiples muestras mediante `PredictStream`.
+
+El cliente se ejecuta mediante el perfil `test` de Docker Compose:
 
 ```powershell
-python dockerfiles/grpc/client.py
+docker compose --profile all --profile test run --rm grpc-client
 ```
 
-Este cliente permite probar una predicción individual mediante `Predict` y el procesamiento de múltiples muestras mediante `PredictStream`.
-
 El acceso al servicio gRPC se encuentra protegido mediante una API Key enviada como metadata con la clave `x-api-key`. La API Key debe coincidir con la variable de entorno `API_KEY` configurada para el proyecto. El cliente obtiene este valor desde el entorno y lo incorpora automáticamente a la metadata de cada solicitud.
+
+Si se desea eliminar la imagen del cliente gRPC:
+
+```powershell
+docker image rm mlops2_tp_integrador-grpc-client
+```
 
 ### 9.4 Seguridad
 
@@ -467,9 +473,9 @@ Una vez finalizado el pipeline de datos debe ejecutarse el DAG:
 
 Este pipeline fue detallado anteriormente en la sección `Entrenamiento y selección del modelo en Airflow`.
 
-### Inicio de todos los servicios
+### Inicio de los servicios principales
 
-Una vez finalizados correctamente ambos DAGs, pueden iniciarse todos los servicios del proyecto mediante:
+Una vez finalizados correctamente ambos DAGs, pueden iniciarse los servicios principales del proyecto mediante:
 
 ```powershell
 docker compose --profile all up -d --build
@@ -522,7 +528,7 @@ Los datos persistidos en los volúmenes de PostgreSQL y MinIO se mantienen dispo
 En cambio, si se desea eliminar los contenedores, imágenes y volúmenes:
 
 ```powershell
-docker compose --profile all down -v --rmi all
+docker compose --profile all --profile test down -v --rmi all
 ```
 
 ## 12. Estructura del proyecto

@@ -21,16 +21,9 @@ if not API_KEY:
     raise RuntimeError("API_KEY no está definida en el archivo .env")
 
 
-GRPC_ADDRESS = "localhost:50051"
+GRPC_ADDRESS = "grpc:50051"
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-TEST_CASES_DIR = (
-    PROJECT_ROOT
-    / "src"
-    / "mlops2_tp"
-    / "test_cases"
-)
+TEST_CASES_DIR = Path(__file__).parent / "test_cases"
 
 
 # ============================================================
