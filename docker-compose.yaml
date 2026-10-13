@@ -152,6 +152,7 @@ services:
       /usr/bin/mc alias set s3 http://s3:9000 ${MINIO_ACCESS_KEY:-minio} ${MINIO_SECRET_ACCESS_KEY:-minio123};
       /usr/bin/mc mb s3/${MLFLOW_BUCKET_NAME:-mlflow};
       /usr/bin/mc mb s3/${DATA_REPO_BUCKET_NAME:-data};
+      /usr/bin/mc mb --ignore-existing s3/${INFERENCE_BUCKET_NAME:-inference};
       exit 0;
       '
 
@@ -299,6 +300,104 @@ services:
     environment:
       - API_KEY=${API_KEY}
     command: python client.py
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.1
+    container_name: kafka
+    profiles:
+      - all
+    networks:
+      - backend
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s    
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.7.1
+    profiles:
+      - all
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - backend
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "kafka-topics
+      --bootstrap-server kafka:9092
+      --create
+      --if-not-exists
+      --topic water.measurements
+      --partitions 2
+      --replication-factor 1"
+
+  kafka-consumer:
+    build:
+      context: .
+      dockerfile: dockerfiles/kafka-consumer/Dockerfile
+    image: kafka_consumer
+    container_name: kafka-consumer
+    profiles:
+      - all
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      mlflow:
+        condition: service_healthy
+      create_s3_buckets:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - INFERENCE_BUCKET_NAME=${INFERENCE_BUCKET_NAME:-inference}
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minio}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
+      - AWS_ENDPOINT_URL_S3=http://s3:9000
+      - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
+    command: python consumer.py
+
+  kafka-producer:
+    build:
+      context: .
+      dockerfile: dockerfiles/kafka-producer/Dockerfile
+    image: kafka_producer
+    container_name: kafka-producer
+    profiles:
+      - test
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      create_s3_buckets:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minio}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
+      - AWS_ENDPOINT_URL_S3=http://s3:9000
+      - PUBLISH_INTERVAL=2
+    command: python producer.py
 
   airflow-apiserver:
     <<: *airflow-common
@@ -501,3 +600,4 @@ networks:
 volumes:
   db_data:
   minio_data:
+  kafka_data:
