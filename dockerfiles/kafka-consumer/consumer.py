@@ -5,6 +5,10 @@ import signal
 from pydantic import ValidationError
 from event_schema import EventoValido
 from datetime import datetime, timezone
+import hashlib
+import hmac
+from collections import deque
+from time import monotonic
 
 import boto3
 from confluent_kafka import Consumer, KafkaException
@@ -45,6 +49,7 @@ STATION_PARTITIONS = {
 
 running = True
 
+HMAC_SECRET = os.environ["KAFKA_HMAC_SECRET"].encode("utf-8")
 
 # ============================================================
 # Finalización controlada
@@ -141,6 +146,60 @@ def save_rejected_event(s3, message, reason):
 
     return object_key
 
+
+# ============================================================
+# Verificación de autenticidad del mensaje por HMAC-SHA256.
+# ============================================================
+def verify_signature(message):
+    """
+    Verifica la autenticidad e integridad del mensaje Kafka
+    mediante HMAC-SHA256.
+    """
+    headers = dict(message.headers() or [])
+    received_signature = headers.get("hmac_signature")
+
+    if received_signature is None:
+        return False
+
+    expected_signature = hmac.new(
+        HMAC_SECRET,
+        message.value(),
+        hashlib.sha256
+    ).hexdigest()
+
+    return hmac.compare_digest(
+        expected_signature,
+        received_signature.decode("utf-8")
+    )
+
+# ============================================================
+# Alertas de seguridad
+# ============================================================
+
+REJECTION_THRESHOLD = 5
+REJECTION_WINDOW_SECONDS = 60
+
+rejection_times = deque()
+
+
+def register_rejection():
+    """Genera una alerta ante múltiples rechazos en 60 segundos."""
+
+    now = monotonic()
+    rejection_times.append(now)
+
+    # Eliminar rechazos fuera de la ventana temporal.
+    while rejection_times and now - rejection_times[0] > REJECTION_WINDOW_SECONDS:
+        rejection_times.popleft()
+
+    if len(rejection_times) == REJECTION_THRESHOLD:
+        print(
+            f"ALERTA DE SEGURIDAD | "
+            f"{len(rejection_times)} eventos rechazados "
+            f"en los últimos {REJECTION_WINDOW_SECONDS} segundos",
+            flush=True,
+        )
+
 # ============================================================
 # Procesamiento de mediciones
 # ============================================================
@@ -157,6 +216,24 @@ def process_message(
     y almacena el resultado en MinIO.
     """
 
+    if not verify_signature(message):
+        object_key = save_rejected_event(
+            s3=s3,
+            message=message,
+            reason="Firma HMAC ausente o inválida"
+        )
+
+        print(
+            f"Evento rechazado por HMAC | "
+            f"Partición: {message.partition()} | "
+            f"Offset: {message.offset()} | "
+            f"MinIO: s3://{INFERENCE_BUCKET}/{object_key}",
+            flush=True
+        )
+
+        register_rejection()    
+        return
+    
     event = json.loads(message.value().decode())
 
     try:
@@ -173,10 +250,14 @@ def process_message(
             f"| Offset: {message.offset()} | MinIO: s3://{INFERENCE_BUCKET}/{object_key}",
             flush=True
         )
-
+        
+        register_rejection()
         return
 
     event = validated_event.model_dump(mode="json")
+
+    # Calcular SHA-256 del mensaje original para auditoría.
+    event_hash = hashlib.sha256(message.value()).hexdigest()
 
     station_id = event["station_id"]
 
@@ -213,13 +294,17 @@ def process_message(
     )
 
     print(
-        f"Estación: {station_id} "
-        f"| Partición: {message.partition()} "
-        f"| Offset: {message.offset()} "
-        f"| Predicción: {int(prediction)} "
-        f"| MinIO: s3://{INFERENCE_BUCKET}/{object_key}",
-        flush=True,
-    )
+    f"Evento aceptado | "
+    f"Event ID: {event['event_id']} | "
+    f"Estación: {station_id} | "
+    f"Timestamp: {event['timestamp']} | "
+    f"SHA-256: {event_hash} | "
+    f"Partición: {message.partition()} | "
+    f"Offset: {message.offset()} | "
+    f"Predicción: {int(prediction)} | "
+    f"MinIO: s3://{INFERENCE_BUCKET}/{object_key}",
+    flush=True,
+)
 
 
 # ============================================================

@@ -374,6 +374,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
       - AWS_ENDPOINT_URL_S3=http://s3:9000
       - MLFLOW_S3_ENDPOINT_URL=http://s3:9000
+      - KAFKA_HMAC_SECRET=${KAFKA_HMAC_SECRET:?La clave HMAC no está configurada}
     command: python consumer.py
 
   kafka-producer:
@@ -397,6 +398,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
       - AWS_ENDPOINT_URL_S3=http://s3:9000
       - PUBLISH_INTERVAL=2
+      - KAFKA_HMAC_SECRET=${KAFKA_HMAC_SECRET:?La clave HMAC no está configurada}
     command: python producer.py
 
   airflow-apiserver:

@@ -4,6 +4,8 @@ import json
 import os
 import time
 import uuid
+import hashlib
+import hmac
 
 from datetime import datetime, timezone
 
@@ -53,6 +55,7 @@ FEATURE_COLUMNS = [
     "Turbidity",
 ]
 
+HMAC_SECRET = os.environ["KAFKA_HMAC_SECRET"].encode("utf-8")
 
 # ============================================================
 # Lectura del dataset desde MinIO
@@ -193,15 +196,15 @@ def main():
         # Procesar confirmaciones pendientes.
         producer.poll(0)
 
+        payload, signature = sign_event(event)
+
         producer.produce(
             topic=KAFKA_TOPIC,
             key=station_id.encode("utf-8"),
-            value=json.dumps(
-                event,
-                allow_nan=False
-            ).encode("utf-8"),
+            value=payload,
             partition=partition,
-            callback=delivery_callback,
+            headers={"hmac_signature": signature},
+            callback=delivery_callback
         )
 
         print(
@@ -229,6 +232,32 @@ def main():
         flush=True
     )
 
+
+# ============================================================
+# Generación de firma en el HEADER
+# ============================================================    
+
+def sign_event(event: dict) -> bytes:
+    """
+    Serializa el evento y genera su firma HMAC-SHA256 a partir
+     del contenido del evento y de la clave secreta.
+
+    La firma se incorpora al mensaje Kafka como header.
+    """
+    payload = json.dumps(
+        event,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False
+    ).encode("utf-8")
+
+    signature = hmac.new(
+        HMAC_SECRET,
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+
+    return payload, signature
 
 if __name__ == "__main__":
     main()

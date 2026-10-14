@@ -3,6 +3,8 @@ import json
 import os
 import uuid
 from datetime import datetime, timezone
+import hashlib
+import hmac
 
 from confluent_kafka import Producer
 
@@ -12,6 +14,8 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv(
 )
 
 KAFKA_TOPIC = "water.measurements"
+
+HMAC_SECRET = os.environ["KAFKA_HMAC_SECRET"].encode("utf-8")
 
 
 def main():
@@ -41,11 +45,25 @@ def main():
         "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS
     })
 
+    payload = json.dumps(
+        event,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False
+    ).encode("utf-8")
+
+    signature = hmac.new(
+        HMAC_SECRET,
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+
     producer.produce(
         topic=KAFKA_TOPIC,
         partition=0,
         key=b"station_A",
-        value=json.dumps(event).encode("utf-8")
+        value=payload,
+        headers={"hmac_signature": signature}
     )
 
     pending = producer.flush(timeout=15)
