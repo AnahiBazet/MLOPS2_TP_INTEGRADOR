@@ -72,7 +72,8 @@ def train_water_potability_model():
         import awswrangler as wr
         import mlflow
         import optuna
-
+        
+        from sklearn.impute import SimpleImputer
         from imblearn.over_sampling import SMOTE
         from imblearn.pipeline import Pipeline
 
@@ -94,7 +95,7 @@ def train_water_potability_model():
         # -----------------------------------------------------
 
         X_train = wr.s3.read_csv(
-            "s3://data/final/train/water_X_train.csv"
+            "s3://data/interim/train/water_X_train.csv"
         )
 
         y_train = wr.s3.read_csv(
@@ -226,16 +227,9 @@ def train_water_potability_model():
                 }
 
             pipeline = Pipeline([
-                (
-                    "oversampler",
-                    SMOTE(
-                        random_state=random_seed
-                    )
-                ),
-                (
-                    "classifier",
-                    model
-                ),
+                ("imputer", SimpleImputer(strategy="median")),
+                ("oversampler", SMOTE(random_state=random_seed)),
+                ("classifier", model)
             ])
               
             # Cada trial queda registrado como child run
@@ -322,7 +316,11 @@ def train_water_potability_model():
     # 2. SELECCIÓN DEL MEJOR MODELO
     # =========================================================
 
-    @task(task_id="select_best_model")
+    @task.virtualenv(
+        task_id="select_best_model",
+        requirements=[],
+        system_site_packages=True,
+    )
     def select_best_model(search_results):
         """
         Select the best model/configuration found by Optuna.
