@@ -165,3 +165,7 @@ cython_debug/
 
 # Environments
 .env
+
+# Entorno aislado para aprendizaje federado con Flower.
+.venv-flower/
+/dockerfiles/federated-app/water_federated/

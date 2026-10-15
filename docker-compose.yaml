@@ -117,6 +117,7 @@ services:
       - mlflow
       - airflow
       - all
+      - federated
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_PORT_UI:-9001}:9001"
@@ -302,6 +303,7 @@ services:
     command: python client.py
 
   kafka:
+    restart: unless-stopped
     image: confluentinc/cp-kafka:7.7.1
     container_name: kafka
     profiles:
@@ -351,6 +353,7 @@ services:
       --replication-factor 1"
 
   kafka-consumer:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/kafka-consumer/Dockerfile
@@ -401,6 +404,88 @@ services:
       - KAFKA_HMAC_SECRET=${KAFKA_HMAC_SECRET:?La clave HMAC no está configurada}
     command: python producer.py
 
+  federated-init:
+    build:
+      context: ./dockerfiles/federated-init
+      dockerfile: Dockerfile
+    image: federated_init
+    container_name: federated-init
+    profiles:
+      - federated
+    depends_on:
+      s3:
+        condition: service_healthy
+    networks:
+      - backend
+    environment:
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minio}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_ACCESS_KEY:-minio123}
+      - AWS_ENDPOINT_URL_S3=http://s3:9000
+    volumes:
+      - ./dockerfiles/federated-client/data:/app/client-data
+      - ./dockerfiles/federated-server/data:/app/server-data
+    command: python prepare_data.py
+
+  fl-superlink:
+    image: flwr/superlink:1.38.0
+    container_name: fl-superlink
+    profiles:
+      - federated
+    networks:
+      - backend
+    ports:
+      - "18000:8000"
+    command:
+      - --insecure
+      - --host
+      - 0.0.0.0
+      - --isolation
+      - process
+
+  fl-supernode-a:
+    image: flwr/supernode:1.38.0
+    container_name: fl-supernode-a
+    profiles:
+      - federated
+    depends_on:
+      - fl-superlink
+    networks:
+      - backend
+    command:
+      - --insecure
+      - --superlink
+      - fl-superlink:9092
+      - --host
+      - 0.0.0.0
+      - --port
+      - "9094"
+      - --isolation
+      - process
+      - --node-config
+      - "laboratory='A'"
+
+  fl-supernode-b:
+    image: flwr/supernode:1.38.0
+    container_name: fl-supernode-b
+    profiles:
+      - federated
+    depends_on:
+      - fl-superlink
+    networks:
+      - backend
+    command:
+      - --insecure
+      - --superlink
+      - fl-superlink:9092
+      - --host
+      - 0.0.0.0
+      - --port
+      - "9094"
+      - --isolation
+      - process
+      - --node-config
+      - "laboratory='B'"
+
   airflow-apiserver:
     <<: *airflow-common
     container_name: airflow-apiserver
@@ -418,6 +503,82 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+
+  fl-superexec-client-a:
+    build:
+      context: .
+      dockerfile: dockerfiles/federated-app/superexec.Dockerfile
+    image: federated_superexec
+    container_name: fl-superexec-client-a
+    profiles:
+      - federated
+    depends_on:
+      fl-supernode-a:
+        condition: service_started
+      federated-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    volumes:
+      # El laboratorio A accede exclusivamente a sus datos.
+      - ./dockerfiles/federated-client/data/client_a:/app/data:ro
+    environment:
+      - FEDERATED_DATA_PATH=/app/data/train.csv
+    command:
+      - --insecure
+      - --plugin-type
+      - clientapp
+      - --runtime-api-address
+      - fl-supernode-a:9094
+
+  fl-superexec-client-b:
+    image: federated_superexec
+    container_name: fl-superexec-client-b
+    profiles:
+      - federated
+    depends_on:
+      fl-supernode-b:
+        condition: service_started
+      federated-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    volumes:
+      # El laboratorio B accede exclusivamente a sus datos.
+      - ./dockerfiles/federated-client/data/client_b:/app/data:ro
+    environment:
+      - FEDERATED_DATA_PATH=/app/data/train.csv
+    command:
+      - --insecure
+      - --plugin-type
+      - clientapp
+      - --runtime-api-address
+      - fl-supernode-b:9094
+
+  fl-superexec-server:
+    image: federated_superexec
+    container_name: fl-superexec-server
+    profiles:
+      - federated
+    depends_on:
+      fl-superlink:
+        condition: service_started
+      federated-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    volumes:
+      # Datos exclusivos para la evaluación centralizada.
+      - ./dockerfiles/federated-server/data:/app/data:ro
+
+      # Guarda los modelos y las métricas fuera del contenedor.
+      - ./dockerfiles/federated-server/results:/app/results
+    command:
+      - --insecure
+      - --plugin-type
+      - serverapp
+      - --runtime-api-address
+      - fl-superlink:8000
 
   airflow-scheduler:
     <<: *airflow-common

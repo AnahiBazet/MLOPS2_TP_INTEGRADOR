@@ -1,0 +1,5 @@
+pandas
+numpy
+scikit-learn
+boto3
+imbalanced-learn>=0.14,<1.0
